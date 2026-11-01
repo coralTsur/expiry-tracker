@@ -16,8 +16,9 @@ The spec is the source of truth: `docs/spec.md`. Read it before any task that to
 - Backend tests live in `backend/src/test/java` (Maven standard). Frontend tests live next to the frontend code.
 
 ## Commands (PowerShell)
-- Backend run:   TBD (after `mvnw` exists)
-- Backend test:  TBD
+Run backend commands from the `backend/` folder:
+- Backend test:  `.\mvnw.cmd test`
+- Backend run:   `.\mvnw.cmd spring-boot:run` (serves on http://localhost:8080, stop with Ctrl+C)
 - Frontend run:  TBD
 - Use PowerShell syntax only. No bash-only commands (no `&&` chains, no `rm -rf`, no `export`).
 
