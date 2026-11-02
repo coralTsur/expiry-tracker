@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -62,23 +63,58 @@ public class ItemService {
 	public ItemResponse create(ItemRequest request) {
 		// Read "today" once, so every date rule in this request uses the same day.
 		LocalDate today = LocalDate.now(clock);
+		int daysBeforeReminder = daysBeforeReminderOrDefault(request);
 
-		// spec sections 3 and 8: daysBeforeReminder that was not sent gets 30, also when the reminder is off.
-		// The default is applied before validation, so the reminder rule checks the value that will be saved.
-		int daysBeforeReminder = request.daysBeforeReminder() != null
-				? request.daysBeforeReminder()
-				: DEFAULT_DAYS_BEFORE_REMINDER;
+		// spec section 5: on create, the date rule and the reminder rule are always checked.
+		throwIfInvalid(validate(request, daysBeforeReminder, today, true, true));
 
-		Map<String, String> fieldErrors = validateForCreate(request, daysBeforeReminder, today);
+		Item item = new Item(request.category(), request.name(), request.expirationDate(), request.reminderEnabled());
+		copyRequestFields(request, daysBeforeReminder, item);
+		// spec section 8: the request has no id, so the database always generates a new one.
+		return ItemResponse.from(repository.save(item));
+	}
+
+	public ItemResponse update(Long id, ItemRequest request) {
+		// spec section 8: no item with this id is a 404. Checked first, before any validation.
+		Item item = repository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
+
+		// Read "today" once, so every date rule in this request uses the same day.
+		LocalDate today = LocalDate.now(clock);
+		int daysBeforeReminder = daysBeforeReminderOrDefault(request);
+
+		// "Changed" means different from the stored item. daysBeforeReminder is compared after the default of 30,
+		// so a value that was not sent counts as 30.
+		boolean expirationDateChanged = !Objects.equals(request.expirationDate(), item.getExpirationDate());
+		boolean reminderFieldsChanged = expirationDateChanged
+				|| !Objects.equals(request.reminderEnabled(), item.isReminderEnabled())
+				|| !Objects.equals(daysBeforeReminder, item.getDaysBeforeReminder());
+
+		// spec section 5: on update, the date rule runs only if expirationDate changed, and the reminder rule
+		// runs only if expirationDate, reminderEnabled or daysBeforeReminder changed.
+		throwIfInvalid(validate(request, daysBeforeReminder, today, expirationDateChanged, reminderFieldsChanged));
+
+		// Every rule passed, so only now is the stored item changed.
+		copyRequestFields(request, daysBeforeReminder, item);
+		return ItemResponse.from(repository.save(item));
+	}
+
+	// spec sections 3 and 8: daysBeforeReminder that was not sent gets 30, also when the reminder is off.
+	// The default is applied before validation, so the rules check the value that will be saved.
+	private static int daysBeforeReminderOrDefault(ItemRequest request) {
+		return request.daysBeforeReminder() != null ? request.daysBeforeReminder() : DEFAULT_DAYS_BEFORE_REMINDER;
+	}
+
+	private static void throwIfInvalid(Map<String, String> fieldErrors) {
 		if (!fieldErrors.isEmpty()) {
 			// spec section 5: when there is an error, the item is not saved.
 			throw new InvalidItemException(fieldErrors);
 		}
-		return ItemResponse.from(repository.save(toNewItem(request, daysBeforeReminder)));
 	}
 
 	// spec section 8: every problem is collected first, so all errors are returned together.
-	private Map<String, String> validateForCreate(ItemRequest request, int daysBeforeReminder, LocalDate today) {
+	// checkDateRule and checkReminderRule are always true on create. On update they depend on what changed.
+	private Map<String, String> validate(ItemRequest request, int daysBeforeReminder, LocalDate today,
+			boolean checkDateRule, boolean checkReminderRule) {
 		Map<String, String> fieldErrors = new LinkedHashMap<>();
 
 		// spec section 3: name is required. spec section 5: a name with only spaces counts as missing.
@@ -92,14 +128,12 @@ public class ItemService {
 		}
 
 		// spec section 3: expirationDate is required.
-		// spec section 5: it must be in the future (from tomorrow on). On create it is always checked.
-		boolean expirationDateValid = false;
+		// spec section 5: it must be in the future (from tomorrow on), when the date rule is checked.
+		boolean expirationDateInFuture = request.expirationDate() != null && request.expirationDate().isAfter(today);
 		if (request.expirationDate() == null) {
 			fieldErrors.put("expirationDate", EXPIRATION_DATE_MISSING);
-		} else if (!request.expirationDate().isAfter(today)) {
+		} else if (checkDateRule && !expirationDateInFuture) {
 			fieldErrors.put("expirationDate", EXPIRATION_DATE_NOT_IN_FUTURE);
-		} else {
-			expirationDateValid = true;
 		}
 
 		// spec section 3: reminderEnabled is required.
@@ -110,7 +144,7 @@ public class ItemService {
 		// spec section 5: days before reminder is a whole number, 0 or more.
 		if (daysBeforeReminder < 0) {
 			fieldErrors.put("daysBeforeReminder", DAYS_NEGATIVE);
-		} else if (Boolean.TRUE.equals(request.reminderEnabled()) && expirationDateValid) {
+		} else if (checkReminderRule && Boolean.TRUE.equals(request.reminderEnabled()) && expirationDateInFuture) {
 			// spec section 5: with the reminder on, days before reminder must be less than the days left
 			// until expiration. Equal is rejected, because the rule says "less than".
 			// spec section 5: when the date is missing or already passed, this rule is skipped.
@@ -142,19 +176,24 @@ public class ItemService {
 		return fieldErrors;
 	}
 
-	private Item toNewItem(ItemRequest request, int daysBeforeReminder) {
-		Item item = new Item(request.category(), request.name(), request.expirationDate(), request.reminderEnabled());
-		// spec section 8: an optional field that was not sent is saved empty.
+	// Shared by create and update. Called only after validation passed.
+	private void copyRequestFields(ItemRequest request, int daysBeforeReminder, Item item) {
+		item.setCategory(request.category());
+		item.setName(request.name());
+		item.setExpirationDate(request.expirationDate());
+		item.setReminderEnabled(request.reminderEnabled());
+		// spec section 8: an optional field that was not sent is saved empty. On PUT this clears the stored value.
 		item.setAmount(request.amount());
 		item.setCurrentAmount(request.currentAmount());
 		// spec section 5: an optional text field sent empty is saved empty (null).
 		item.setLastFourDigits(emptyToNull(request.lastFourDigits()));
 		item.setAcceptedStores(emptyToNull(request.acceptedStores()));
 		item.setDaysBeforeReminder(daysBeforeReminder);
-		// spec section 8: redeemed that was not sent is false on create. A value that was sent is saved as sent.
-		item.setRedeemed(Boolean.TRUE.equals(request.redeemed()));
-		// spec section 8: the request has no id, so the database always generates a new one.
-		return item;
+		// spec section 8: redeemed that was not sent keeps its value: false for a new item (the entity default),
+		// the stored value on update. A value that was sent is saved as sent.
+		if (request.redeemed() != null) {
+			item.setRedeemed(request.redeemed());
+		}
 	}
 
 	private static boolean isNegative(BigDecimal value) {
