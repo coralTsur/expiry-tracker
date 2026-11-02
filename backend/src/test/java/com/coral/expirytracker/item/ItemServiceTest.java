@@ -735,6 +735,129 @@ class ItemServiceTest {
 		assertThat(item.getLastFourDigits()).isNull();
 	}
 
+	// ---- redeem ----
+
+	// spec section 7: marking an item as redeemed -> it disappears from "expiring soon".
+	@Test
+	void redeem_itemDisappearsFromExpiringSoon() {
+		Item stored = repository.save(storedItem(TODAY.plusDays(5), false, 30));
+		assertThat(service.findExpiringSoon()).extracting(ItemResponse::id).containsExactly(stored.getId());
+
+		service.redeem(stored.getId());
+		entityManager.flush();
+		entityManager.clear();
+
+		assertThat(service.findExpiringSoon()).isEmpty();
+	}
+
+	@Test
+	void redeem_setsRedeemedTrue_andSavesIt() {
+		Item stored = repository.save(storedItem(TODAY.plusDays(60), false, 30));
+
+		ItemResponse response = service.redeem(stored.getId());
+
+		assertThat(response.redeemed()).isTrue();
+		assertThat(reloaded(stored.getId()).isRedeemed()).isTrue();
+	}
+
+	@Test
+	void redeem_changesNoOtherField() {
+		Item stored = storedItem(TODAY.plusDays(60), true, 14);
+		stored.setAmount(new BigDecimal("200"));
+		stored.setCurrentAmount(new BigDecimal("150"));
+		stored.setLastFourDigits("1234");
+		stored.setAcceptedStores("Fox, Castro");
+		repository.save(stored);
+
+		service.redeem(stored.getId());
+
+		Item item = reloaded(stored.getId());
+		assertThat(item.getCategory()).isEqualTo(Category.GIFT_CARD);
+		assertThat(item.getName()).isEqualTo("Stored item");
+		assertThat(item.getExpirationDate()).isEqualTo(TODAY.plusDays(60));
+		assertThat(item.getAmount()).isEqualByComparingTo("200");
+		assertThat(item.getCurrentAmount()).isEqualByComparingTo("150");
+		assertThat(item.getLastFourDigits()).isEqualTo("1234");
+		assertThat(item.getAcceptedStores()).isEqualTo("Fox, Castro");
+		assertThat(item.isReminderEnabled()).isTrue();
+		assertThat(item.getDaysBeforeReminder()).isEqualTo(14);
+	}
+
+	// spec section 5: an expired item can be marked as redeemed.
+	@Test
+	void redeem_expiredItem_isAllowed() {
+		Item stored = repository.save(storedItem(TODAY.minusDays(5), true, 7));
+
+		assertThat(service.redeem(stored.getId()).redeemed()).isTrue();
+		assertThat(reloaded(stored.getId()).isRedeemed()).isTrue();
+	}
+
+	@Test
+	void redeem_alreadyRedeemedItem_returnsRedeemedTrue() {
+		Item stored = storedItem(TODAY.plusDays(60), false, 30);
+		stored.setRedeemed(true);
+		repository.save(stored);
+
+		assertThat(service.redeem(stored.getId()).redeemed()).isTrue();
+		assertThat(reloaded(stored.getId()).isRedeemed()).isTrue();
+	}
+
+	@Test
+	void redeem_throwsItemNotFound_whenIdDoesNotExist() {
+		assertThatThrownBy(() -> service.redeem(99L))
+				.isInstanceOf(ItemNotFoundException.class)
+				.hasMessage("פריט 99 לא נמצא");
+	}
+
+	// ---- delete ----
+
+	// spec section 7: deleting an item -> it no longer appears in the list of all items.
+	@Test
+	void delete_itemNoLongerAppearsInFindAll() {
+		Item stored = repository.save(storedItem(TODAY.plusDays(60), false, 30));
+		assertThat(service.findAll()).extracting(ItemResponse::id).containsExactly(stored.getId());
+
+		service.delete(stored.getId());
+		entityManager.flush();
+		entityManager.clear();
+
+		assertThat(service.findAll()).isEmpty();
+	}
+
+	@Test
+	void delete_removesItemFromDatabase() {
+		Item stored = repository.save(storedItem(TODAY.plusDays(60), false, 30));
+
+		service.delete(stored.getId());
+		entityManager.flush();
+		entityManager.clear();
+
+		assertThat(repository.findById(stored.getId())).isEmpty();
+	}
+
+	@Test
+	void delete_leavesOtherItems() {
+		Item toDelete = repository.save(storedItem(TODAY.plusDays(60), false, 30));
+		Item toKeep = repository.save(storedItem(TODAY.plusDays(90), false, 30));
+
+		service.delete(toDelete.getId());
+
+		assertThat(reloaded(toKeep.getId()).getExpirationDate()).isEqualTo(TODAY.plusDays(90));
+		assertThat(repository.count()).isEqualTo(1);
+	}
+
+	@Test
+	void delete_throwsItemNotFound_andDeletesNothing() {
+		Item stored = repository.save(storedItem(TODAY.plusDays(60), false, 30));
+
+		assertThatThrownBy(() -> service.delete(99L))
+				.isInstanceOf(ItemNotFoundException.class)
+				.hasMessage("פריט 99 לא נמצא");
+
+		assertThat(reloaded(stored.getId())).isNotNull();
+		assertThat(repository.count()).isEqualTo(1);
+	}
+
 	private void assertUpdateRejectedWith(Long id, ItemRequest request, Map<String, String> expectedFieldErrors) {
 		assertThatThrownBy(() -> service.update(id, request))
 				.isInstanceOfSatisfying(InvalidItemException.class,

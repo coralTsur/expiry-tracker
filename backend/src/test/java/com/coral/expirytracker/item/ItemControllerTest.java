@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -401,6 +404,68 @@ class ItemControllerTest {
 				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
 
 		verify(service, never()).update(any(), any());
+	}
+
+	// ---- PATCH /api/items/{id}/redeem ----
+
+	@Test
+	void patch_returns200WithRedeemedTrue() throws Exception {
+		when(service.redeem(5L)).thenReturn(new ItemResponse(5L, Category.GIFT_CARD, "BuyMe", LocalDate.of(2030, 3, 1),
+				null, null, null, null, false, 30, true));
+
+		mockMvc.perform(patch("/api/items/5/redeem"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.length()").value(11))
+				.andExpect(jsonPath("$.id").value(5))
+				.andExpect(jsonPath("$.redeemed").value(true));
+	}
+
+	@Test
+	void patch_passesPathIdToService() throws Exception {
+		when(service.redeem(5L)).thenReturn(savedItem(5L));
+
+		mockMvc.perform(patch("/api/items/5/redeem"))
+				.andExpect(status().isOk());
+
+		verify(service).redeem(5L);
+	}
+
+	@Test
+	void patch_returns404WithErrorBody() throws Exception {
+		when(service.redeem(99L)).thenThrow(new ItemNotFoundException(99L));
+
+		mockMvc.perform(patch("/api/items/99/redeem"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Not Found"))
+				.andExpect(jsonPath("$.message").value("פריט 99 לא נמצא"))
+				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
+	}
+
+	// ---- DELETE /api/items/{id} ----
+
+	@Test
+	void delete_returns204WithEmptyBody() throws Exception {
+		mockMvc.perform(delete("/api/items/5"))
+				.andExpect(status().isNoContent())
+				.andExpect(content().string(""));
+
+		verify(service).delete(5L);
+	}
+
+	@Test
+	void delete_returns404WithErrorBody() throws Exception {
+		doThrow(new ItemNotFoundException(99L)).when(service).delete(99L);
+
+		mockMvc.perform(delete("/api/items/99"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Not Found"))
+				.andExpect(jsonPath("$.message").value("פריט 99 לא נמצא"))
+				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
 	}
 
 	private ItemResponse savedItem(Long id) {
