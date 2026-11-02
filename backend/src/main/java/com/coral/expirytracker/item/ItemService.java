@@ -98,6 +98,22 @@ public class ItemService {
 		return ItemResponse.from(repository.save(item));
 	}
 
+	public ItemResponse redeem(Long id) {
+		// spec section 8: no item with this id is a 404.
+		Item item = repository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
+		// spec section 8: the answer is the item with redeemed true. No other field changes.
+		// The spec defines no rule for redeeming, so nothing is validated: an expired item can be redeemed
+		// (spec section 5), and an item that is already redeemed is returned as it is.
+		item.setRedeemed(true);
+		return ItemResponse.from(repository.save(item));
+	}
+
+	public void delete(Long id) {
+		// spec section 8: no item with this id is a 404.
+		Item item = repository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
+		repository.delete(item);
+	}
+
 	// spec sections 3 and 8: daysBeforeReminder that was not sent gets 30, also when the reminder is off.
 	// The default is applied before validation, so the rules check the value that will be saved.
 	private static int daysBeforeReminderOrDefault(ItemRequest request) {
