@@ -5,7 +5,7 @@ The spec is the source of truth: `docs/spec.md`. Read it before any task that to
 
 ## Stack
 - Backend: Java 21, Spring Boot, Maven (via the Maven wrapper `mvnw`)
-- Frontend: React
+- Frontend: React + Vite, JavaScript (no TypeScript)
 - Database: H2 to start, PostgreSQL later
 - Dev machine: Windows, PowerShell, VS Code
 
@@ -19,7 +19,12 @@ The spec is the source of truth: `docs/spec.md`. Read it before any task that to
 Run backend commands from the `backend/` folder:
 - Backend test:  `.\mvnw.cmd test`
 - Backend run:   `.\mvnw.cmd spring-boot:run` (serves on http://localhost:8080, stop with Ctrl+C)
-- Frontend run:  TBD
+
+Run frontend commands from the `frontend/` folder. Use `npm.cmd`, not `npm` (PowerShell may block `npm.ps1`):
+- Frontend install: `npm.cmd install` (after cloning, or when `package.json` changes)
+- Frontend run:  `npm.cmd run dev` (serves on http://localhost:5173, stop with Ctrl+C). The backend must be running on port 8080 for data to load.
+- Frontend lint:  `npm.cmd run lint`
+
 - Use PowerShell syntax only. No bash-only commands (no `&&` chains, no `rm -rf`, no `export`).
 
 ## Naming conventions
