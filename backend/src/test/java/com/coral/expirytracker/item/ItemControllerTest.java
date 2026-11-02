@@ -3,11 +3,13 @@ package com.coral.expirytracker.item;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -321,6 +323,84 @@ class ItemControllerTest {
 				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
 
 		verify(service, never()).create(any());
+	}
+
+	// ---- PUT /api/items/{id} ----
+
+	@Test
+	void put_returns200WithUpdatedItem() throws Exception {
+		when(service.update(eq(5L), any())).thenReturn(savedItem(5L));
+
+		mockMvc.perform(put("/api/items/5").contentType(MediaType.APPLICATION_JSON).content(VALID_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.length()").value(11))
+				.andExpect(jsonPath("$.id").value(5))
+				.andExpect(jsonPath("$.name").value("BuyMe"))
+				.andExpect(jsonPath("$.expirationDate").value("2030-03-01"));
+	}
+
+	@Test
+	void put_passesPathIdAndParsedBodyToService() throws Exception {
+		when(service.update(eq(5L), any())).thenReturn(savedItem(5L));
+
+		mockMvc.perform(put("/api/items/5").contentType(MediaType.APPLICATION_JSON).content(VALID_JSON))
+				.andExpect(status().isOk());
+
+		ArgumentCaptor<ItemRequest> captor = ArgumentCaptor.forClass(ItemRequest.class);
+		verify(service).update(eq(5L), captor.capture());
+		ItemRequest request = captor.getValue();
+		assertThat(request.category()).isEqualTo(Category.GIFT_CARD);
+		assertThat(request.name()).isEqualTo("BuyMe");
+		assertThat(request.expirationDate()).isEqualTo(LocalDate.of(2030, 3, 1));
+		assertThat(request.amount()).isEqualByComparingTo("200");
+		assertThat(request.currentAmount()).isEqualByComparingTo("150");
+		assertThat(request.reminderEnabled()).isTrue();
+		assertThat(request.daysBeforeReminder()).isEqualTo(14);
+		assertThat(request.redeemed()).isNull();
+	}
+
+	@Test
+	void put_returns404WithErrorBody() throws Exception {
+		when(service.update(eq(99L), any())).thenThrow(new ItemNotFoundException(99L));
+
+		mockMvc.perform(put("/api/items/99").contentType(MediaType.APPLICATION_JSON).content(VALID_JSON))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.status").value(404))
+				.andExpect(jsonPath("$.error").value("Not Found"))
+				.andExpect(jsonPath("$.message").value("פריט 99 לא נמצא"))
+				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
+	}
+
+	@Test
+	void put_returns400WithFieldErrors() throws Exception {
+		when(service.update(eq(5L), any())).thenThrow(new InvalidItemException(Map.of(
+				"currentAmount", "הסכום העדכני לא יכול להיות גדול מהסכום המקורי")));
+
+		mockMvc.perform(put("/api/items/5").contentType(MediaType.APPLICATION_JSON).content(VALID_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.error").value("Bad Request"))
+				.andExpect(jsonPath("$.message").value(ITEM_NOT_SAVED))
+				.andExpect(jsonPath("$.fieldErrors.length()").value(1))
+				.andExpect(jsonPath("$.fieldErrors.currentAmount")
+						.value("הסכום העדכני לא יכול להיות גדול מהסכום המקורי"));
+	}
+
+	@Test
+	void put_unreadableBody_returns400WithoutFieldErrors_andSkipsService() throws Exception {
+		mockMvc.perform(put("/api/items/5").contentType(MediaType.APPLICATION_JSON)
+						.content(VALID_JSON.replace("\"GIFT_CARD\"", "\"FOO\"")))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.error").value("Bad Request"))
+				.andExpect(jsonPath("$.message").value(ITEM_NOT_SAVED))
+				.andExpect(jsonPath("$.fieldErrors").doesNotHaveJsonPath());
+
+		verify(service, never()).update(any(), any());
 	}
 
 	private ItemResponse savedItem(Long id) {
