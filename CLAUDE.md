@@ -5,7 +5,7 @@ The spec is the source of truth: `docs/spec.md`. Read it before any task that to
 
 ## Stack
 - Backend: Java 21, Spring Boot, Maven (via the Maven wrapper `mvnw`)
-- Frontend: React + Vite, JavaScript (no TypeScript)
+- Frontend: React + Vite, JavaScript (no TypeScript), React Router (declarative mode)
 - Database: H2 to start, PostgreSQL later
 - Dev machine: Windows, PowerShell, VS Code
 
