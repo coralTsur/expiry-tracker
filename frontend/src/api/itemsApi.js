@@ -42,6 +42,11 @@ export function fetchItems() {
   return request('/api/items');
 }
 
+// The server filters and sorts this list (spec sections 5 and 8), so the client shows it as is.
+export function fetchExpiringSoon() {
+  return request('/api/items/expiring-soon');
+}
+
 export function redeemItem(id) {
   return request(`/api/items/${id}/redeem`, { method: 'PATCH' });
 }

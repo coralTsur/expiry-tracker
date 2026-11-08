@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { deleteItem, fetchItems, redeemItem } from '../api/itemsApi';
+import { deleteItem, redeemItem } from '../api/itemsApi';
 import ItemTable from './ItemTable';
 
-function ItemList() {
+// loadItems: the API function that fetches this screen's list (fetchItems or fetchExpiringSoon).
+// removeRedeemed: true on lists that must not show redeemed items, so a redeemed row is removed.
+function ItemList({ loadItems, emptyText, removeRedeemed }) {
   const [items, setItems] = useState([]);
   // Starts as true so the first render already shows the loading text.
   const [loading, setLoading] = useState(true);
@@ -13,9 +15,10 @@ function ItemList() {
   const [actionPending, setActionPending] = useState(false);
 
   useEffect(() => {
-    async function loadItems() {
+    // Named load, not loadItems, so it does not hide the loadItems prop.
+    async function load() {
       try {
-        const data = await fetchItems();
+        const data = await loadItems();
         setItems(data);
       } catch (err) {
         setError(err);
@@ -24,8 +27,10 @@ function ItemList() {
       }
     }
 
-    loadItems();
-  }, []);
+    load();
+    // The pages pass module-level API functions, so loadItems keeps the same reference
+    // between renders and the effect runs only once per mount.
+  }, [loadItems]);
 
   async function handleRedeem(item) {
     setActionError(null);
@@ -33,9 +38,13 @@ function ItemList() {
     try {
       const updatedItem = await redeemItem(item.id);
       // Functional update: after the await, the items from this render may be stale.
-      setItems((prevItems) =>
-        prevItems.map((i) => (i.id === updatedItem.id ? updatedItem : i)),
-      );
+      if (removeRedeemed) {
+        setItems((prevItems) => prevItems.filter((i) => i.id !== updatedItem.id));
+      } else {
+        setItems((prevItems) =>
+          prevItems.map((i) => (i.id === updatedItem.id ? updatedItem : i)),
+        );
+      }
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -76,7 +85,7 @@ function ItemList() {
     <>
       {actionError && <p role="alert">{actionError}</p>}
       {items.length === 0 ? (
-        <p>אין עדיין פריטים.</p>
+        <p>{emptyText}</p>
       ) : (
         <ItemTable
           items={items}

@@ -1,0 +1,24 @@
+.main-nav ul {
+  display: flex;
+  gap: 24px;
+  margin: 0;
+  padding: 16px 0;
+  list-style: none;
+  border-bottom: 1px solid #ccc;
+}
+
+.main-nav a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+/* NavLink sets aria-current="page" on the active link. Bold + underline, not colour only. */
+.main-nav a[aria-current='page'] {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.main-nav a:focus-visible {
+  outline: 2px solid #0645ad;
+  outline-offset: 2px;
+}
