@@ -1,7 +1,7 @@
 import ItemRow from './ItemRow';
 import './ItemTable.css';
 
-function ItemTable({ items }) {
+function ItemTable({ items, onRedeem, onDelete, actionPending }) {
   return (
     <div className="item-table-wrapper">
       <table className="item-table">
@@ -11,11 +11,18 @@ function ItemTable({ items }) {
             <th>שם</th>
             <th>תאריך תוקף</th>
             <th>מומש</th>
+            <th>פעולות</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
-            <ItemRow key={item.id} item={item} />
+            <ItemRow
+              key={item.id}
+              item={item}
+              onRedeem={onRedeem}
+              onDelete={onDelete}
+              actionPending={actionPending}
+            />
           ))}
         </tbody>
       </table>
