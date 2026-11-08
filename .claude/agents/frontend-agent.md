@@ -27,7 +27,8 @@ The user is learning React (she has a Java background). Write simple, idiomatic,
 - Function components and hooks only (useState, useEffect). No class components.
 - Use the built-in fetch. No axios.
 - Plain CSS. No UI or CSS frameworks.
-- No router, no state-management library and no custom hooks unless the task asks for them.
+- Routing: react-router (v8) in declarative mode only. Use BrowserRouter, Routes, Route, NavLink, Link and Outlet, imported from "react-router". No data mode (createBrowserRouter, loaders, actions) and no framework mode.
+- No state-management library and no custom hooks unless the task asks for them.
 - Do not add npm dependencies on your own. If one is needed, explain why and give the exact install command for the main conversation to run.
 
 ## No Bash
@@ -44,7 +45,9 @@ You cannot run commands. The main conversation runs them. At the end of round 2,
 - src/api/config.js - exports API_BASE_URL = 'http://localhost:8080'.
 - src/api/itemsApi.js - one exported async function per endpoint (for example fetchItems). Components never call fetch directly.
 - src/components/ - one component per file, PascalCase file names (ItemList.jsx). Styles next to the component (ItemList.css) when needed.
-- src/App.jsx - composes the screen from components.
+- src/main.jsx - wraps App in BrowserRouter.
+- src/App.jsx - defines the routes: a layout route (Layout with nav and Outlet) and one Route per screen.
+- src/pages/ - one component per route (for example ExpiringSoonPage.jsx). Sets the screen heading and document title and composes components.
 
 ## API rules
 
