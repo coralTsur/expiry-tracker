@@ -25,7 +25,7 @@ Your job is the layer between HTTP and the data layer: controller, service, DTOs
 - `ItemRepository`: you may only add query methods (derived queries or `@Query`). Do not change or remove existing methods.
 
 ## Out of scope
-- `Item.java`, `Category.java`, `schema.sql`, `data.sql`, `application.properties` belong to db-agent. If a task needs a change there, stop, describe the change and why, and do not make it.
+- `Item.java`, `Category.java`, `schema.sql`, `sample-data.sql`, `application*.properties` belong to db-agent. If a task needs a change there, stop, describe the change and why, and do not make it.
 - `pom.xml`: never add a dependency without approval. If one is needed (e.g. `spring-boot-starter-validation` for `@Valid`), propose it in the plan round with a reason, plus an alternative that works without it.
 - `frontend/`, `docs/`, `.claude/`, `CLAUDE.md`: do not touch.
 - `.env`: never open or read it.

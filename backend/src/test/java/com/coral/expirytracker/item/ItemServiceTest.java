@@ -30,7 +30,8 @@ class ItemServiceTest {
 		this.service = new ItemService(repository, clockAt(TODAY));
 	}
 
-	// data.sql dates follow the real today and the clock here is fixed, so its rows must not reach any test.
+	// Sample data (sample-data.sql) only loads in the dev profile. This guard keeps the table empty anyway,
+	// because sample dates follow the real today and the clock here is fixed.
 	@BeforeEach
 	void removeSampleData() {
 		repository.deleteAll();
