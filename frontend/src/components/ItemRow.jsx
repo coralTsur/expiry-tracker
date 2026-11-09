@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { CATEGORY_LABELS } from '../utils/categoryLabels';
 import { formatDate } from '../utils/formatDate';
 
@@ -10,6 +11,10 @@ function ItemRow({ item, onRedeem, onDelete, actionPending }) {
       <td>{item.redeemed ? 'כן' : 'לא'}</td>
       <td>
         <div className="item-actions">
+          {/* A link, not a button: it moves to another screen and changes nothing by itself. */}
+          <Link to={`/items/${item.id}/edit`} className="button-link">
+            עריכה
+          </Link>
           {!item.redeemed && (
             <button
               type="button"

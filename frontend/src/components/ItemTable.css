@@ -25,3 +25,24 @@
   display: flex;
   gap: 8px;
 }
+
+/* The edit link looks like the buttons next to it. */
+.item-actions .button-link {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid #767676;
+  border-radius: 3px;
+  background-color: #efefef;
+  color: #222;
+  font-size: 0.8333rem;
+  text-decoration: none;
+}
+
+.item-actions .button-link:hover {
+  background-color: #e3e3e3;
+}
+
+.item-actions .button-link:focus-visible {
+  outline: 2px solid #0645ad;
+  outline-offset: 2px;
+}

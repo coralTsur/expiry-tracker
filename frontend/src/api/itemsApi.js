@@ -2,7 +2,8 @@ import { API_BASE_URL } from './config';
 
 const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. נסי שוב מאוחר יותר.';
 const SERVER_ERROR_MESSAGE = 'אירעה שגיאה בשרת. נסי שוב מאוחר יותר.';
-const NOT_FOUND_MESSAGE = 'הפריט לא נמצא. ייתכן שכבר נמחק.';
+// Exported so the edit screen can show the same text for an id that is not a number, without a request.
+export const NOT_FOUND_MESSAGE = 'הפריט לא נמצא. ייתכן שכבר נמחק.';
 // spec section 8, errors: the message of every 400.
 const ITEM_NOT_SAVED_MESSAGE = 'הפריט לא נשמר';
 
@@ -57,11 +58,25 @@ export function fetchExpiringSoon() {
   return request('/api/items/expiring-soon');
 }
 
+export function fetchItem(id) {
+  return request(`/api/items/${id}`);
+}
+
 // item: the request body from spec section 8, without id. The server answers 201 with the saved item.
 export function createItem(item) {
   return request('/api/items', {
     method: 'POST',
     // Without this header Spring does not read the body as JSON.
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  });
+}
+
+// item: the full item without id (spec section 8: an optional field that is not sent is emptied).
+// The server answers 200 with the item after the update.
+export function updateItem(id, item) {
+  return request(`/api/items/${id}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item),
   });

@@ -15,7 +15,32 @@ export const EMPTY_ITEM_VALUES = {
   acceptedStores: '',
   reminderEnabled: null,
   daysBeforeReminder: '30', // spec section 3: default 30.
+  redeemed: false, // spec section 3: default "לא".
 };
+
+// The server's default for daysBeforeReminder that was not sent (spec section 8).
+const DEFAULT_DAYS_BEFORE_REMINDER = 30;
+
+// Server item -> form values. Inputs need strings, so numbers become strings and null becomes ''.
+// daysBeforeReminder must be a string too: DAYS_PRESETS holds strings, so the number 14 would show as "אחר".
+export function toFormValues(item) {
+  return {
+    category: item.category ?? '',
+    name: item.name ?? '',
+    expirationDate: item.expirationDate ?? '',
+    amount: numberToText(item.amount),
+    currentAmount: numberToText(item.currentAmount),
+    lastFourDigits: item.lastFourDigits ?? '',
+    acceptedStores: item.acceptedStores ?? '',
+    reminderEnabled: item.reminderEnabled,
+    daysBeforeReminder: numberToText(item.daysBeforeReminder),
+    redeemed: item.redeemed,
+  };
+}
+
+function numberToText(value) {
+  return value === null || value === undefined ? '' : String(value);
+}
 
 // spec section 8, "error messages by field" and "client-side only error messages". Copied exactly.
 const NAME_MISSING = 'יש להזין שם';
@@ -51,7 +76,21 @@ function daysBetween(fromDate, toDate) {
   return Math.round((to - from) / MS_PER_DAY);
 }
 
-function validateDaysBeforeReminder(values, today) {
+function isWholeNumberAtLeastZero(text) {
+  if (text === '') {
+    return false;
+  }
+  const number = Number(text);
+  return Number.isInteger(number) && number >= 0;
+}
+
+// The days value the way the server compares it: '' is not sent, so it counts as the default of 30.
+function daysForComparison(text) {
+  return text === '' ? DEFAULT_DAYS_BEFORE_REMINDER : Number(text);
+}
+
+// checkRange: false on an update where none of the reminder fields changed (spec section 5).
+function validateDaysBeforeReminder(values, today, checkRange) {
   if (values.daysBeforeReminder === '') {
     return DAYS_MISSING;
   }
@@ -64,7 +103,7 @@ function validateDaysBeforeReminder(values, today) {
   }
   // spec section 5: when the date is missing or already passed, this rule is skipped.
   const dateInFuture = values.expirationDate !== '' && values.expirationDate > today;
-  if (dateInFuture && days >= daysBetween(today, values.expirationDate)) {
+  if (checkRange && dateInFuture && days >= daysBetween(today, values.expirationDate)) {
     return REMINDER_TOO_LONG;
   }
   return null;
@@ -72,9 +111,20 @@ function validateDaysBeforeReminder(values, today) {
 
 // Returns { fieldName: message } for every field with a problem. An empty object means the form is valid.
 // The same rules as the server (spec sections 5 and 8). If the two disagree, the server decides.
-export function validateItem(values) {
+// originalValues: the values the form started with. On the add screen they are EMPTY_ITEM_VALUES,
+// so every field counts as changed and the date and reminder rules always run, as spec section 5 requires.
+export function validateItem(values, originalValues) {
   const errors = {};
   const today = todayString();
+
+  // spec section 5, update: the date rule runs only if expirationDate changed, and the reminder rule
+  // only if expirationDate, reminderEnabled or daysBeforeReminder changed. Same comparison as the server.
+  const dateChanged = values.expirationDate !== originalValues.expirationDate;
+  const reminderFieldsChanged =
+    dateChanged ||
+    values.reminderEnabled !== originalValues.reminderEnabled ||
+    daysForComparison(values.daysBeforeReminder) !==
+      daysForComparison(originalValues.daysBeforeReminder);
 
   // spec section 5: a name with only spaces counts as missing.
   if (values.name.trim() === '') {
@@ -88,7 +138,7 @@ export function validateItem(values) {
   // yyyy-MM-dd strings sort like dates, so they can be compared directly.
   if (values.expirationDate === '') {
     errors.expirationDate = EXPIRATION_DATE_MISSING;
-  } else if (values.expirationDate <= today) {
+  } else if (dateChanged && values.expirationDate <= today) {
     errors.expirationDate = EXPIRATION_DATE_NOT_IN_FUTURE;
   }
 
@@ -98,7 +148,7 @@ export function validateItem(values) {
 
   // The days field is hidden when the reminder is not "כן", so it is not checked either.
   if (values.reminderEnabled === true) {
-    const daysError = validateDaysBeforeReminder(values, today);
+    const daysError = validateDaysBeforeReminder(values, today, reminderFieldsChanged);
     if (daysError) {
       errors.daysBeforeReminder = daysError;
     }
@@ -138,9 +188,21 @@ function toNumberOrNull(text) {
   return text === '' ? null : Number(text);
 }
 
-// Form values (strings) -> the request body of spec section 8.
-// id and redeemed are not sent: the server sets the id, and redeemed that is not sent is false on create.
-export function toRequestBody(values) {
+// With the reminder off the days field is hidden, but its value is still saved by the server.
+// Sending null would make the server store 30 and lose a saved value such as 14, so the hidden value
+// is sent if it is valid. If it is not, the user cannot see it to fix it, so the original value is sent.
+// On the add screen the original is '30', the same as the server's default.
+function daysToSend(values, originalValues) {
+  if (values.reminderEnabled === true || isWholeNumberAtLeastZero(values.daysBeforeReminder)) {
+    // With the reminder on, validateItem has already checked the value.
+    return Number(values.daysBeforeReminder);
+  }
+  return toNumberOrNull(originalValues.daysBeforeReminder);
+}
+
+// Form values (strings) -> the request body of spec section 8. PUT sends the full item, so every field is here.
+// id is not sent: it comes from the path or the server sets it.
+export function toRequestBody(values, originalValues) {
   return {
     category: emptyToNull(values.category),
     name: emptyToNull(values.name),
@@ -150,7 +212,7 @@ export function toRequestBody(values) {
     lastFourDigits: emptyToNull(values.lastFourDigits),
     acceptedStores: emptyToNull(values.acceptedStores),
     reminderEnabled: values.reminderEnabled,
-    // With the reminder off, the hidden value is not sent, and the server stores its default of 30.
-    daysBeforeReminder: values.reminderEnabled === true ? Number(values.daysBeforeReminder) : null,
+    daysBeforeReminder: daysToSend(values, originalValues),
+    redeemed: values.redeemed,
   };
 }
