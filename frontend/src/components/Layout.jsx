@@ -15,6 +15,9 @@ function Layout() {
           <li>
             <NavLink to="/expiring-soon">פג בקרוב</NavLink>
           </li>
+          <li>
+            <NavLink to="/items/new">הוספת פריט</NavLink>
+          </li>
         </ul>
       </nav>
       <main>
