@@ -15,8 +15,8 @@ function toServerErrors(serverFieldErrors) {
 // After a change, an error is only updated if it is already shown. A new error appears on blur (spec section 5).
 // changedField: its server error no longer applies, so it is removed; its client error is checked again.
 // Other fields: a client error is checked again (amount can affect currentAmount), a server error is kept.
-function errorsAfterChange(prevErrors, changedField, newValues) {
-  const clientErrors = validateItem(newValues);
+function errorsAfterChange(prevErrors, changedField, newValues, originalValues) {
+  const clientErrors = validateItem(newValues, originalValues);
   const nextErrors = {};
   for (const [field, error] of Object.entries(prevErrors)) {
     if (error.fromServer && field !== changedField) {
@@ -28,10 +28,12 @@ function errorsAfterChange(prevErrors, changedField, newValues) {
   return nextErrors;
 }
 
-// initialValues: the values the form starts with (EMPTY_ITEM_VALUES when adding).
+// initialValues: the values the form starts with (EMPTY_ITEM_VALUES when adding, the saved item when editing).
+// They are also the "original" values for the update rules of spec section 5.
 // onSubmit(item): async, receives the request body. If it throws, the form shows the error.
-// The page decides what the submit does, so the edit screen can reuse this form later.
-function ItemForm({ initialValues, submitLabel, onSubmit }) {
+// showRedeemed: true on the edit screen only, where an item can be marked or unmarked as redeemed.
+// The page decides what the submit does, so the add and edit screens share this form.
+function ItemForm({ initialValues, submitLabel, onSubmit, showRedeemed = false }) {
   const [values, setValues] = useState(initialValues);
   // { field: { message, fromServer } }. fromServer: a client re-check must not remove a server error.
   const [fieldErrors, setFieldErrors] = useState({});
@@ -46,7 +48,7 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
     // The new values are built here, so validation does not see the values from before this change.
     const newValues = { ...values, [field]: value };
     setValues(newValues);
-    setFieldErrors((prevErrors) => errorsAfterChange(prevErrors, field, newValues));
+    setFieldErrors((prevErrors) => errorsAfterChange(prevErrors, field, newValues, initialValues));
   }
 
   function handleChange(event) {
@@ -56,6 +58,11 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
   // Radio values are the strings "true" and "false". The state holds a real boolean.
   function handleReminderChange(event) {
     updateField('reminderEnabled', event.target.value === 'true');
+  }
+
+  // A checkbox's value is always "on". Whether it is ticked is in checked.
+  function handleRedeemedChange(event) {
+    updateField('redeemed', event.target.checked);
   }
 
   function handleDaysOptionChange(event) {
@@ -72,7 +79,7 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
   // spec section 5: a field's error appears when the user leaves the field.
   function handleBlur(event) {
     const field = event.target.name;
-    const message = validateItem(values)[field];
+    const message = validateItem(values, initialValues)[field];
     setFieldErrors((prevErrors) => {
       const nextErrors = { ...prevErrors };
       if (message) {
@@ -89,7 +96,7 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
     event.preventDefault();
     setGeneralError(null);
 
-    const clientErrors = validateItem(values);
+    const clientErrors = validateItem(values, initialValues);
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors((prevErrors) => {
         // Server errors on fields the client finds valid are kept. The rest are replaced by client errors.
@@ -109,7 +116,7 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
 
     setSubmitting(true);
     try {
-      await onSubmit(toRequestBody(values));
+      await onSubmit(toRequestBody(values, initialValues));
       // On success the page navigates away, so submitting stays true and the button cannot be clicked twice.
     } catch (err) {
       setFieldErrors(toServerErrors(err.fieldErrors));
@@ -339,6 +346,19 @@ function ItemForm({ initialValues, submitLabel, onSubmit }) {
               </>
             )}
             {renderError('daysBeforeReminder')}
+          </div>
+        )}
+
+        {showRedeemed && (
+          <div className="form-field checkbox-field">
+            <input
+              id="redeemed"
+              name="redeemed"
+              type="checkbox"
+              checked={values.redeemed}
+              onChange={handleRedeemedChange}
+            />
+            <label htmlFor="redeemed">מומש</label>
           </div>
         )}
 

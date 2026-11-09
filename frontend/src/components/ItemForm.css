@@ -35,6 +35,12 @@ fieldset.form-field {
   gap: 4px;
 }
 
+/* The redeemed checkbox sits on one line with its label, not above it like the other fields. */
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+}
+
 .field-error,
 .form-error {
   margin: 0;
