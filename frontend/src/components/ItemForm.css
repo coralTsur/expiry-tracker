@@ -1,0 +1,58 @@
+.item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 420px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* A fieldset has its own border and padding. Reset them so it looks like the other fields. */
+fieldset.form-field {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.form-field input,
+.form-field select {
+  padding: 6px 8px;
+  font: inherit;
+}
+
+.radio-group {
+  display: flex;
+  gap: 24px;
+}
+
+.radio-group span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field-error,
+.form-error {
+  margin: 0;
+  color: #b00020;
+}
+
+.form-error {
+  margin-block-end: 16px;
+  font-weight: 600;
+}
+
+.item-form button {
+  align-self: flex-start;
+  padding: 8px 24px;
+  font: inherit;
+}
+
+/* Chrome/Edge: hide the browser's date placeholder while the field is empty and not focused. */
+input.date-empty:not(:focus)::-webkit-datetime-edit {
+  color: transparent;
+}

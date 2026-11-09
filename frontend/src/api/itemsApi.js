@@ -3,6 +3,8 @@ import { API_BASE_URL } from './config';
 const NETWORK_ERROR_MESSAGE = 'לא ניתן להתחבר לשרת. נסי שוב מאוחר יותר.';
 const SERVER_ERROR_MESSAGE = 'אירעה שגיאה בשרת. נסי שוב מאוחר יותר.';
 const NOT_FOUND_MESSAGE = 'הפריט לא נמצא. ייתכן שכבר נמחק.';
+// spec section 8, errors: the message of every 400.
+const ITEM_NOT_SAVED_MESSAGE = 'הפריט לא נשמר';
 
 // Shared by every endpoint: network failure, non-2xx response, or success.
 async function request(path, options) {
@@ -22,8 +24,16 @@ async function request(path, options) {
     } catch {
       // The error body is not JSON (for example an HTML error page), so body stays null.
     }
-    // The server's 404 message contains the item id, which the spec says is never shown.
-    const message = response.status === 404 ? NOT_FOUND_MESSAGE : SERVER_ERROR_MESSAGE;
+    let message;
+    if (response.status === 400) {
+      // A 400 is a problem with the input, not a server failure, so the server's own message is shown.
+      message = body?.message ?? ITEM_NOT_SAVED_MESSAGE;
+    } else if (response.status === 404) {
+      // The server's 404 message contains the item id, which the spec says is never shown.
+      message = NOT_FOUND_MESSAGE;
+    } else {
+      message = SERVER_ERROR_MESSAGE;
+    }
     const error = new Error(message);
     error.status = response.status;
     error.fieldErrors = body?.fieldErrors ?? null;
@@ -45,6 +55,16 @@ export function fetchItems() {
 // The server filters and sorts this list (spec sections 5 and 8), so the client shows it as is.
 export function fetchExpiringSoon() {
   return request('/api/items/expiring-soon');
+}
+
+// item: the request body from spec section 8, without id. The server answers 201 with the saved item.
+export function createItem(item) {
+  return request('/api/items', {
+    method: 'POST',
+    // Without this header Spring does not read the body as JSON.
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  });
 }
 
 export function redeemItem(id) {
