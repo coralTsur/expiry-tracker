@@ -1,14 +1,25 @@
+/* The form sits in a white card, like the table. */
 .item-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 420px;
+  gap: var(--space-5);
+  max-width: 480px;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
+}
+
+.form-field label,
+.form-field legend {
+  font-weight: 600;
 }
 
 /* A fieldset has its own border and padding. Reset them so it looks like the other fields. */
@@ -18,44 +29,69 @@ fieldset.form-field {
   border: none;
 }
 
-.form-field input,
+.form-field input:not([type='radio']):not([type='checkbox']),
 .form-field select {
-  padding: 6px 8px;
-  font: inherit;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.form-field input:not([type='radio']):not([type='checkbox']):focus-visible,
+.form-field select:focus-visible {
+  border-color: var(--color-primary);
+}
+
+/* ItemForm sets aria-invalid on a field with an error, so the field itself is marked, not only the text under it. */
+.form-field [aria-invalid='true'] {
+  border-color: var(--color-danger);
+  /* A shadow, not a wider border, so the field does not grow and push the layout. */
+  box-shadow: 0 0 0 1px var(--color-danger);
 }
 
 .radio-group {
   display: flex;
-  gap: 24px;
+  gap: var(--space-5);
 }
 
 .radio-group span {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 /* The redeemed checkbox sits on one line with its label, not above it like the other fields. */
 .checkbox-field {
   flex-direction: row;
   align-items: center;
+  gap: var(--space-2);
 }
 
-.field-error,
-.form-error {
+/* Field error: danger colour, bold, and a side bar (inline-start, so on the right in RTL). Not colour only. */
+.field-error {
   margin: 0;
-  color: #b00020;
-}
-
-.form-error {
-  margin-block-end: 16px;
+  padding-inline-start: var(--space-2);
+  border-inline-start: 3px solid var(--color-danger);
+  color: var(--color-danger);
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
-.item-form button {
+/* The submit button is the one solid teal button: the main action on the screen. */
+.item-form button[type='submit'] {
   align-self: flex-start;
-  padding: 8px 24px;
-  font: inherit;
+  padding: var(--space-2) var(--space-6);
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-size: var(--text-base);
+}
+
+.item-form button[type='submit']:hover:not(:disabled) {
+  border-color: var(--color-primary-hover);
+  background-color: var(--color-primary-hover);
+  color: var(--color-surface);
 }
 
 /* Chrome/Edge: hide the browser's date placeholder while the field is empty and not focused. */

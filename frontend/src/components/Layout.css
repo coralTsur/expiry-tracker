@@ -1,24 +1,46 @@
+/* The nav is a white card with a thin coloured stripe on top: the app's one decorative splash of colour. */
+.main-nav {
+  margin-block-start: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* The stripe. Decoration only, so it is drawn in CSS and not part of the page content. */
+.main-nav::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(to left, var(--color-primary), var(--color-sun), var(--color-coral));
+}
+
 .main-nav ul {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin: 0;
-  padding: 16px 0;
+  padding: var(--space-3) var(--space-4);
   list-style: none;
-  border-bottom: 1px solid #ccc;
 }
 
 .main-nav a {
-  color: #0645ad;
+  display: inline-block;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
   text-decoration: none;
+}
+
+.main-nav a:hover {
+  background-color: var(--color-primary-soft);
 }
 
 /* NavLink sets aria-current="page" on the active link. Bold + underline, not colour only. */
 .main-nav a[aria-current='page'] {
-  font-weight: bold;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-weight: 700;
   text-decoration: underline;
-}
-
-.main-nav a:focus-visible {
-  outline: 2px solid #0645ad;
-  outline-offset: 2px;
+  text-underline-offset: 4px;
 }
