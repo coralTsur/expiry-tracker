@@ -30,6 +30,7 @@ You do not touch:
 - Dates are dates, not text: `DATE` in SQL, `LocalDate` in Java.
 - Store enums as text (`@Enumerated(EnumType.STRING)`), never as numbers.
 - Every table has a primary key named `id`.
+- Sample data lives in `sample-data.sql` and loads only in the `dev` profile. Never create a `data.sql`: Spring Boot would run it in real use and insert sample rows into the real database.
 - Sample data: a few realistic rows covering every category, including at least one item that expires within 30 days and one already expired.
 
 ## How you work

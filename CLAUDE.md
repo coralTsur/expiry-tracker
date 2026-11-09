@@ -18,7 +18,8 @@ The spec is the source of truth: `docs/spec.md`. Read it before any task that to
 ## Commands (PowerShell)
 Run backend commands from the `backend/` folder:
 - Backend test:  `.\mvnw.cmd test`
-- Backend run:   `.\mvnw.cmd spring-boot:run` (serves on http://localhost:8080, stop with Ctrl+C)
+- Backend run:   `.\mvnw.cmd spring-boot:run` (serves on http://localhost:8080, stop with Ctrl+C). Real use: H2 file database in `backend/data/`, data survives restarts, no sample data. Always start from `backend/`.
+- Backend run (dev): `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"` (in-memory database with sample data, reset on every start). Keep the quotes, PowerShell splits the argument without them.
 
 Run frontend commands from the `frontend/` folder. Use `npm.cmd`, not `npm` (PowerShell may block `npm.ps1`):
 - Frontend install: `npm.cmd install` (after cloning, or when `package.json` changes)

@@ -1,5 +1,8 @@
 HELP.md
 target/
+
+### H2 file database (real-use data, created on first run) ###
+/data/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
