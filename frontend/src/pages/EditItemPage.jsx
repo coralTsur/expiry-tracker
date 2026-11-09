@@ -47,7 +47,7 @@ function EditItemPage() {
   function renderLoadError(message) {
     return (
       <>
-        <p role="alert">{message}</p>
+        <p className="alert" role="alert">{message}</p>
         <Link to="/">חזרה לכל הפריטים</Link>
       </>
     );
@@ -57,7 +57,7 @@ function EditItemPage() {
   if (!validId) {
     content = renderLoadError(NOT_FOUND_MESSAGE);
   } else if (loading) {
-    content = <p role="status">טוען פריט...</p>;
+    content = <p className="loading" role="status">טוען פריט...</p>;
   } else if (error) {
     // 404 gets the fixed not-found text from request(), a network or server error its own message.
     content = renderLoadError(error.message);

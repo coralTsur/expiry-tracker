@@ -74,18 +74,18 @@ function ItemList({ loadItems, emptyText, removeRedeemed }) {
   }
 
   if (loading) {
-    return <p role="status">טוען פריטים...</p>;
+    return <p className="loading" role="status">טוען פריטים...</p>;
   }
 
   if (error) {
-    return <p role="alert">{error.message}</p>;
+    return <p className="alert" role="alert">{error.message}</p>;
   }
 
   return (
     <>
-      {actionError && <p role="alert">{actionError}</p>}
+      {actionError && <p className="alert" role="alert">{actionError}</p>}
       {items.length === 0 ? (
-        <p>{emptyText}</p>
+        <p className="empty-state">{emptyText}</p>
       ) : (
         <ItemTable
           items={items}

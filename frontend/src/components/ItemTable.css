@@ -1,6 +1,10 @@
 /* On narrow screens the table scrolls sideways instead of breaking the layout. */
 .item-table-wrapper {
   overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .item-table {
@@ -10,39 +14,42 @@
 
 .item-table th,
 .item-table td {
-  padding-block: 8px;
-  padding-inline: 12px;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
   text-align: start;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .item-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.item-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.item-table tbody tr:hover {
+  background-color: var(--color-bg);
 }
 
 .item-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
-/* The edit link looks like the buttons next to it. */
-.item-actions .button-link {
-  display: inline-block;
-  padding: 1px 6px;
-  border: 1px solid #767676;
-  border-radius: 3px;
-  background-color: #efefef;
-  color: #222;
-  font-size: 0.8333rem;
-  text-decoration: none;
-}
+/* The edit link and the buttons share the button look from index.css. */
 
-.item-actions .button-link:hover {
-  background-color: #e3e3e3;
-}
-
-.item-actions .button-link:focus-visible {
-  outline: 2px solid #0645ad;
-  outline-offset: 2px;
+/*
+ * Icon-only row actions (spec section 9): equal squares, so the column lines up row by row.
+ * Colours, hover, focus ring and the disabled look all come from the shared button rules in index.css.
+ */
+.item-actions .icon-button {
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: 0;
+  font-size: var(--text-lg);
 }
