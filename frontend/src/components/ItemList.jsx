@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { deleteItem, redeemItem } from '../api/itemsApi';
 import ItemTable from './ItemTable';
 
+// How long a success message stays on screen (spec section 9, "הודעות אחרי פעולה").
+const SUCCESS_MESSAGE_MS = 5000;
+
 // loadItems: the API function that fetches this screen's list (fetchItems or fetchExpiringSoon).
 // removeRedeemed: true on lists that must not show redeemed items, so a redeemed row is removed.
 // initialSuccessMessage: a success message to show on mount (after add or edit), or null.
@@ -35,6 +38,23 @@ function ItemList({ loadItems, emptyText, removeRedeemed, initialSuccessMessage 
     // The pages pass module-level API functions, so loadItems keeps the same reference
     // between renders and the effect runs only once per mount.
   }, [loadItems]);
+
+  // Hides a success message after SUCCESS_MESSAGE_MS. Errors get no timer.
+  useEffect(() => {
+    // Start only after the list has loaded, so a message from add or edit
+    // (which arrives while the list is still loading) gets its full 5 seconds on screen.
+    if (!successMessage || loading) {
+      return;
+    }
+
+    const timerId = setTimeout(() => setSuccessMessage(null), SUCCESS_MESSAGE_MS);
+    // The cleanup clears the old timer when the message changes (a new message restarts
+    // the 5 seconds) and when the component unmounts (screen change). So setState never
+    // runs on an unmounted component, and an old timer never hides a newer message.
+    // Two messages with the same text also restart the timer: each action first sets the
+    // message to null, and the await gives a render in between, so this effect runs again.
+    return () => clearTimeout(timerId);
+  }, [successMessage, loading]);
 
   async function handleRedeem(item) {
     setActionError(null);
