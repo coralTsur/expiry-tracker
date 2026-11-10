@@ -18,6 +18,15 @@
   /* Reserved for errors, so an error never blends in with the other colours. */
   --color-danger: #b42318;
   --color-danger-soft: #fef3f2;
+  /* Row status pills (spec section 9): grey, red, orange, green. Each text colour is dark enough to read on its soft background. */
+  --color-status-redeemed: #5b6675;
+  --color-status-redeemed-soft: #f2f4f7;
+  --color-status-expired: #b42318;
+  --color-status-expired-soft: #fef3f2;
+  --color-status-expiring: #b54708;
+  --color-status-expiring-soft: #fffaeb;
+  --color-status-valid: #067647;
+  --color-status-valid-soft: #ecfdf3;
 
   /* Type scale. */
   --font-family: system-ui, 'Segoe UI', 'Arial Hebrew', 'Noto Sans Hebrew', sans-serif;

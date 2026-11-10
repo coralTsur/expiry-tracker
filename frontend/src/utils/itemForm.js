@@ -1,5 +1,7 @@
 // Helpers for the item form: initial values, form values -> request body, and client-side validation.
 
+import { daysBetween, todayString } from './dates';
+
 // The dropdown values for "days before reminder" (spec section 3). Any other number is "אחר".
 export const DAYS_PRESETS = ['7', '14', '30'];
 
@@ -55,26 +57,6 @@ const DAYS_NOT_WHOLE = 'יש להזין מספר שלם';
 const AMOUNT_NEGATIVE = 'הסכום לא יכול להיות שלילי';
 const CURRENT_AMOUNT_ABOVE_AMOUNT = 'הסכום העדכני לא יכול להיות גדול מהסכום המקורי';
 const LAST_FOUR_DIGITS_INVALID = 'יש להזין בדיוק 4 ספרות';
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-// Today in the browser's time zone, as yyyy-MM-dd, the same format as <input type="date">.
-function todayString() {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
-
-// Whole days from one yyyy-MM-dd date to another.
-// Date.UTC ignores daylight-saving changes, so every day is exactly 24 hours long.
-function daysBetween(fromDate, toDate) {
-  const [fromYear, fromMonth, fromDay] = fromDate.split('-').map(Number);
-  const [toYear, toMonth, toDay] = toDate.split('-').map(Number);
-  const from = Date.UTC(fromYear, fromMonth - 1, fromDay);
-  const to = Date.UTC(toYear, toMonth - 1, toDay);
-  return Math.round((to - from) / MS_PER_DAY);
-}
 
 function isWholeNumberAtLeastZero(text) {
   if (text === '') {

@@ -35,6 +35,39 @@
   background-color: var(--color-bg);
 }
 
+/*
+ * Row status (spec section 9): a pill with a Hebrew label, so the status is readable without the colour.
+ * nowrap keeps "פג בקרוב" on one line in a narrow column.
+ */
+.status {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-redeemed {
+  background-color: var(--color-status-redeemed-soft);
+  color: var(--color-status-redeemed);
+}
+
+.status-expired {
+  background-color: var(--color-status-expired-soft);
+  color: var(--color-status-expired);
+}
+
+.status-expiring {
+  background-color: var(--color-status-expiring-soft);
+  color: var(--color-status-expiring);
+}
+
+.status-valid {
+  background-color: var(--color-status-valid-soft);
+  color: var(--color-status-valid);
+}
+
 .item-actions {
   display: flex;
   gap: var(--space-2);
