@@ -10,7 +10,8 @@ function ItemTable({ items, onRedeem, onDelete, actionPending }) {
             <th>קטגוריה</th>
             <th>שם</th>
             <th>תאריך תוקף</th>
-            <th>מומש</th>
+            <th>סטטוס</th>
+            {/*<th>מומש</th>*/}
             <th>פעולות</th>
           </tr>
         </thead>

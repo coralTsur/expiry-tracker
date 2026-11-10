@@ -18,3 +18,15 @@ VALUES ('INSURANCE', 'Car insurance', CURRENT_DATE + INTERVAL '90' DAY, 3200.00,
 
 INSERT INTO items (category, name, expiration_date, amount, current_amount, last_four_digits, accepted_stores, reminder_enabled, days_before_reminder, redeemed)
 VALUES ('OTHER', 'Passport', CURRENT_DATE + INTERVAL '400' DAY, NULL, NULL, NULL, NULL, FALSE, NULL, FALSE);
+
+INSERT INTO items (category, name, expiration_date, amount, current_amount, last_four_digits, accepted_stores, reminder_enabled, days_before_reminder, redeemed)
+VALUES ('GIFT_CARD', 'Expires today gift card', CURRENT_DATE, 50.00, 50.00, NULL, NULL, FALSE, NULL, FALSE);
+
+INSERT INTO items (category, name, expiration_date, amount, current_amount, last_four_digits, accepted_stores, reminder_enabled, days_before_reminder, redeemed)
+VALUES ('GIFT_CARD', 'Expired yesterday voucher', CURRENT_DATE - INTERVAL '1' DAY, 80.00, 30.00, NULL, NULL, FALSE, NULL, FALSE);
+
+INSERT INTO items (category, name, expiration_date, amount, current_amount, last_four_digits, accepted_stores, reminder_enabled, days_before_reminder, redeemed)
+VALUES ('INSURANCE', 'Insurance in 30 days', CURRENT_DATE + INTERVAL '30' DAY, NULL, NULL, NULL, NULL, FALSE, NULL, FALSE);
+
+INSERT INTO items (category, name, expiration_date, amount, current_amount, last_four_digits, accepted_stores, reminder_enabled, days_before_reminder, redeemed)
+VALUES ('CAR_TEST', 'Car test in 31 days', CURRENT_DATE + INTERVAL '31' DAY, NULL, NULL, NULL, NULL, FALSE, NULL, FALSE);
