@@ -8,9 +8,10 @@ function AddItemPage() {
 
   // No try/catch here: an error goes back to ItemForm, which shows it next to the fields.
   async function handleSubmit(item) {
-    await createItem(item);
-    // No success message. The list loads the new item when it mounts.
-    navigate('/');
+    const savedItem = await createItem(item);
+    // The name comes from the item the server saved. The message travels in the navigation state,
+    // so the list screen can show it after it mounts.
+    navigate('/', { state: { message: `הפריט "${savedItem.name}" נוסף` } });
   }
 
   return (
