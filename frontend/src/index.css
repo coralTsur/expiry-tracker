@@ -18,6 +18,9 @@
   /* Reserved for errors, so an error never blends in with the other colours. */
   --color-danger: #b42318;
   --color-danger-soft: #fef3f2;
+  /* Reserved for success messages after an action. */
+  --color-success: #067647;
+  --color-success-soft: #ecfdf3;
   /* Row status pills (spec section 9): grey, red, orange, green. Each text colour is dark enough to read on its soft background. */
   --color-status-redeemed: #5b6675;
   --color-status-redeemed-soft: #f2f4f7;
@@ -170,6 +173,18 @@ button:disabled {
   border-radius: var(--radius-sm);
   background-color: var(--color-danger-soft);
   color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Success message after an action. The same box as .alert, in the success colours. */
+.success {
+  margin-block: 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-success);
+  border-inline-start-width: 4px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
   font-weight: 600;
 }
 

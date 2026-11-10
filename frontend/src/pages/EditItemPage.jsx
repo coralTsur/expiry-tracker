@@ -39,9 +39,10 @@ function EditItemPage() {
 
   // No try/catch here: an error goes back to ItemForm, which shows it next to the fields.
   async function handleSubmit(body) {
-    await updateItem(id, body);
-    // No success message. The list loads the updated item when it mounts.
-    navigate('/');
+    const savedItem = await updateItem(id, body);
+    // The name comes from the item the server saved. The message travels in the navigation state,
+    // so the list screen can show it after it mounts.
+    navigate('/', { state: { message: `הפריט "${savedItem.name}" עודכן` } });
   }
 
   function renderLoadError(message) {
