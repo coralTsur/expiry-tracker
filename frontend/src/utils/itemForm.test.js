@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { validateItem, EMPTY_ITEM_VALUES } from './itemForm';
 
 // A valid add-screen form. The far-future date and reminderEnabled false keep the date and
@@ -50,5 +50,57 @@ describe('validateItem', () => {
     expect(validate({ amount: '100', currentAmount: '101' }).currentAmount).toBe(
       'הסכום העדכני לא יכול להיות גדול מהסכום המקורי',
     );
+  });
+});
+
+describe('validateItem date rules (today is 2026-11-12)', () => {
+  // validateItem reads today from the real clock, so the clock is frozen to keep the results stable.
+  // Local noon: todayString reads local date parts, so today is 2026-11-12 in any time zone.
+  // Month 10 is November, because Date months start at 0.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 12, 12, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('a date in the past is an error', () => {
+    expect(validate({ expirationDate: '2026-11-11' }).expirationDate).toBe(
+      'התאריך כבר עבר, אנא הזיני תאריך עתידי',
+    );
+  });
+
+  test('today is an error', () => {
+    expect(validate({ expirationDate: '2026-11-12' }).expirationDate).toBe(
+      'התאריך כבר עבר, אנא הזיני תאריך עתידי',
+    );
+  });
+
+  test('tomorrow has no error', () => {
+    expect(validate({ expirationDate: '2026-11-13' })).not.toHaveProperty('expirationDate');
+  });
+
+  test('a reminder shorter than the days left has no error', () => {
+    // 2026-11-12 to 2026-12-12 is 30 days, because November has 30 days.
+    expect(
+      validate({ reminderEnabled: true, expirationDate: '2026-12-12', daysBeforeReminder: '29' }),
+    ).not.toHaveProperty('daysBeforeReminder');
+  });
+
+  test('a reminder equal to the days left is an error', () => {
+    expect(
+      validate({ reminderEnabled: true, expirationDate: '2026-12-12', daysBeforeReminder: '30' })
+        .daysBeforeReminder,
+    ).toBe('טווח התזכורת ארוך מהזמן שנשאר עד התוקף, אנא בחרי טווח קצר יותר');
+  });
+
+  test('on edit, a past date that did not change has no error', () => {
+    // The saved item as the edit screen holds it (toFormValues). Its date has already passed.
+    // Spec section 7: the change is saved, and the form saves only when there are no errors at all.
+    const originalValues = { ...VALID_VALUES, expirationDate: '2026-11-01' };
+    const values = { ...originalValues, name: 'BuyMe 2' };
+    expect(validateItem(values, originalValues)).toStrictEqual({});
   });
 });
