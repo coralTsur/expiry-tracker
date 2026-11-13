@@ -86,3 +86,101 @@
   padding: 0;
   font-size: var(--text-lg);
 }
+
+/*
+ * Phones (spec section 9, "תצוגה בטלפון"): each row becomes a card of three lines.
+ * The DOM keeps the column order category, name, date, status, actions; only the visual position changes,
+ * so screen readers and the Tab order are the same as on desktop.
+ */
+@media (max-width: 600px) {
+  /* The wrapper stops being one big card, because each row becomes its own card. */
+  .item-table-wrapper {
+    overflow: visible;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  .item-table {
+    display: block;
+  }
+
+  .item-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* Hidden from the eye but kept for screen readers. display: none would remove the headers for them too. */
+  .item-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Line 1: name and status. Line 2: category and date. Line 3: actions. */
+  .item-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'name     status'
+      'category date'
+      'actions  actions';
+    gap: var(--space-1) var(--space-3);
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* On a touch screen hover sticks after a tap; keep the card white instead of the desktop row highlight. */
+  .item-table tbody tr:hover {
+    background-color: var(--color-surface);
+  }
+
+  .item-table td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .cell-name {
+    grid-area: name;
+    font-weight: 700;
+  }
+
+  .cell-status {
+    grid-area: status;
+  }
+
+  .cell-category {
+    grid-area: category;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .cell-date {
+    grid-area: date;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .cell-actions {
+    grid-area: actions;
+    padding-block-start: var(--space-2);
+  }
+
+  /* Touch targets: at least 44x44 with room between them, so a finger does not hit the wrong action. */
+  .item-actions {
+    gap: var(--space-3);
+  }
+
+  .item-actions .icon-button {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
+}

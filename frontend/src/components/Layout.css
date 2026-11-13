@@ -44,3 +44,20 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
+/*
+ * Phones: less padding and gap, so the three links fit on one line.
+ * nowrap keeps each link's text together; flex-wrap on the ul still lets whole links move down on very narrow screens.
+ */
+@media (max-width: 600px) {
+  .main-nav ul {
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Side padding 8px (not 12px): saves 24px across the three links, enough for one line at 360px. */
+  .main-nav a {
+    padding: var(--space-1) var(--space-2);
+    white-space: nowrap;
+  }
+}

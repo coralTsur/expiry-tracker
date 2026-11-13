@@ -17,19 +17,20 @@ const STATUS_CLASS_NAMES = {
 function ItemRow({ item, onRedeem, onDelete, actionPending }) {
   const status = getItemStatus(item);
 
+  // role="row" and role="cell": see ItemTable. The cell-* class names place each cell in the phone card (ItemTable.css).
   return (
-    <tr>
-      <td>{CATEGORY_LABELS[item.category] ?? item.category}</td>
-      <td>{item.name}</td>
-      <td>{formatDate(item.expirationDate)}</td>
+    <tr role="row">
+      <td role="cell" className="cell-category">{CATEGORY_LABELS[item.category] ?? item.category}</td>
+      <td role="cell" className="cell-name">{item.name}</td>
+      <td role="cell" className="cell-date">{formatDate(item.expirationDate)}</td>
       {/* spec section 9: the status is text with a colour, not a colour alone. */}
-      <td>
+      <td role="cell" className="cell-status">
         <span className={`status ${STATUS_CLASS_NAMES[status]}`}>{STATUS_LABELS[status]}</span>
       </td>
       {
       //<td>{item.redeemed ? 'כן' : 'לא'}</td>
       }
-      <td>
+      <td role="cell" className="cell-actions">
         <div className="item-actions">
           {/* A link, not a button: it moves to another screen and changes nothing by itself. */}
           <Link

@@ -98,3 +98,37 @@ fieldset.form-field {
 input.date-empty:not(:focus)::-webkit-datetime-edit {
   color: transparent;
 }
+
+/*
+ * Phones: every field is already full width (.form-field is a flex column, so its children stretch).
+ * These rules make the fields, the choice rows and the submit button tall enough to tap.
+ */
+@media (max-width: 600px) {
+  /* No 480px cap: between about 505px and 600px the form would otherwise stop short of the screen edge. */
+  .item-form {
+    max-width: none;
+    padding: var(--space-4);
+  }
+
+  .form-field input:not([type='radio']):not([type='checkbox']),
+  .form-field select {
+    min-height: var(--tap-target);
+  }
+
+  /* The labels themselves get the height, so the whole tall row is clickable, not only the text. */
+  .radio-group span,
+  .radio-group label,
+  .checkbox-field,
+  .checkbox-field label {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap-target);
+  }
+
+  /* Full width instead of flex-start. Buttons are inline-flex (index.css), so the text needs centring. */
+  .item-form button[type='submit'] {
+    align-self: stretch;
+    justify-content: center;
+    min-height: var(--tap-target);
+  }
+}
