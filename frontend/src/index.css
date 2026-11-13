@@ -52,6 +52,9 @@
   --radius-pill: 999px;
   --shadow-card: 0 1px 2px rgb(31 42 55 / 6%), 0 4px 12px rgb(31 42 55 / 6%);
 
+  /* Smallest comfortable touch target on phones (the common 44px guideline). Used only inside the phone media queries. */
+  --tap-target: 44px;
+
   font-family: var(--font-family);
   font-size: var(--text-base);
   line-height: 1.5;
@@ -68,6 +71,13 @@ body {
   margin-inline: auto;
   padding-inline: var(--space-4);
   padding-block-end: var(--space-7);
+}
+
+/* Phones: a little less side padding, so the nav and the item cards get more width. */
+@media (max-width: 600px) {
+  #root {
+    padding-inline: var(--space-3);
+  }
 }
 
 /* fit-content: the heading is only as wide as its text, so the mark below can match that width. */
