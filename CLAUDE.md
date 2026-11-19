@@ -46,6 +46,11 @@ Run frontend commands from the `frontend/` folder. Use `npm.cmd`, not `npm` (Pow
 - If the spec is unclear or missing something, ask me. Do not invent requirements, and do not edit `docs/spec.md` without my approval.
 - Never read, open or edit `.env` or any file with secrets.
 
+## AI-SDLC flow
+- Every feature or change goes through the `/feature` skill. The process, roles, gates and change tiers are in `docs/ai-workflow.md`. Read it before any task that is part of the flow. If it disagrees with this file, stop and ask me.
+- Every decision is recorded in `docs/decisions/log.md`. It is append-only, and only the orchestrator (the main session) writes to it.
+- Agents advise and implement, I decide. A real choice between options is raised as a `DECISION NEEDED`, never decided by an agent.
+
 ## Git
 - Never commit or push without my explicit approval. Show me the list of changed files and the commit message first.
 - Stage files by name (`git add path/to/file`). Never use `git add .` or `git add -A`.

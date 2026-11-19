@@ -10,11 +10,11 @@ The human (the owner) acts as management: sets priorities, approves scope, picks
 |---|---|---|---|
 | Product | Brief: user stories, acceptance criteria, proposed spec changes | Returns the `Brief` section (the orchestrator writes it into `docs/work/<id>.md`) | Edit `docs/spec.md`, design the solution |
 | Architect | Design: components, API shape, data impact, trade-offs | Returns the `Design` section | Write production code |
-| QA | Test plan, tests written from acceptance criteria, verification | Returns the `Test plan` section; writes test folders | Change production code |
-| Developers (`db-agent`, `server-agent`, `frontend-agent`) | Implementation inside their own folder | `backend/`, `frontend/` | Cross into another agent's folder |
+| QA | Test plan, tests written from acceptance criteria, verification | Returns the `Test plan` section; writes only the backend `acceptance/` package and `*.acceptance.test.*` files | Change production code, edit other tests |
+| Developers (`db-agent`, `server-agent`, `frontend-agent`) | Implementation and their own unit tests inside their own folder | `backend/`, `frontend/` | Cross into another agent's folder, edit QA's acceptance tests |
 | Security | Two reviews: the design (threat model, before any code) and the PR diff (auth, input handling, secrets, dependencies) | Returns the `Security design review` and `Security PR review` sections | Fix code or design itself, only report and give a verdict |
-| Release / DevOps | Workflows, Dockerfile, deploy config, environments | `.github/`, deploy config | Read or write secrets |
-| Briefing | Daily and on-demand brief for the owner: what was decided, what waits for the owner, what is blocked or risky | `docs/briefs/YYYY-MM-DD.md` | Decide anything, change the log, edit any other file |
+| Release / DevOps (planned, not built yet) | Workflows, Dockerfile, deploy config, environments | `.github/`, deploy config | Read or write secrets |
+| Briefing (planned, not built yet) | Daily and on-demand brief for the owner: what was decided, what waits for the owner, what is blocked or risky | `docs/briefs/YYYY-MM-DD.md` | Decide anything, change the log, edit any other file |
 | Orchestrator (main session, `/feature`) | Runs the pipeline, runs tests and lint, talks to the owner, writes every agent report into the feature file and every entry in the decision log | `docs/work/<id>.md`, `docs/decisions/log.md` | Skip a gate |
 
 The orchestrator is the main session because subagents cannot start other subagents or ask the owner questions directly.
@@ -56,8 +56,25 @@ A gate means the orchestrator stops and waits. No stage starts before the gate b
 ### Security loops
 - **Design loop:** Security reviews the design before any code exists, so flaws are fixed where they are cheapest. A rejected design goes back to the Architect. If the Architect and Security disagree on a trade-off, it becomes a `DECISION NEEDED` for the owner.
 - **PR loop:** Security reviews the actual diff. Findings are rated critical, high, medium or low. The fix loop runs until no critical or high finding is open. Medium and low findings are fixed or logged in the decision log.
-- **Escape hatch:** after 3 rounds of the PR loop without convergence, the orchestrator stops and raises a `DECISION NEEDED` to the owner.
+- **Escape hatch:** after 3 rounds of the design loop or of the PR loop without convergence, the orchestrator stops and raises a `DECISION NEEDED` to the owner.
 - **Risk acceptance:** only the owner can accept an open finding, and only as an `owner-decision` entry in the decision log with a reason. Agents never downgrade a finding to pass the gate.
+
+## Change tiers
+
+Not every change needs the whole pipeline. The first step of every task is triage: the orchestrator classifies the change into a tier and proposes it with its reasons. The owner confirms (or overrides) before anything else runs.
+
+| Tier | What it is | Runs | Skipped |
+|---|---|---|---|
+| **1: Small** | Page title, wording, styling, docs. No change to data, API, validation, dependencies, configuration or workflows. | The one developer agent that owns the change, then CI and the owner's merge | Product, Architect, Security design review, QA acceptance tests, the other developer agents. No feature file: one entry in the decision log is the record. |
+| **2: Standard** | A behavior change inside one layer, with no change to the data model, the API contract, authentication or dependencies | A short Brief from Product (Gate 1), QA acceptance tests, the developer agent, QA verification, Security PR review | Architect and Security design review |
+| **3: Full** | A new feature, or anything that touches the database schema, the API contract, authentication or security, secrets or configuration, dependencies, CI/CD or infrastructure, or personal data | The whole pipeline above | Nothing |
+
+Rules:
+- **Always, in every tier:** CI runs, the owner approves before merge, and the decision log gets an entry.
+- **Escalate, never shrink.** If a change touches any Tier 3 trigger (schema, API contract, authentication, secrets or configuration, a dependency, a workflow, infrastructure, personal data), it is Tier 3 whatever else is true. The orchestrator may never classify below a trigger.
+- **Re-triage.** If an agent finds mid-task that the change is bigger than classified (for example a "title change" turns out to need an API change), the orchestrator stops and re-triages with the owner. It does not continue under the old tier.
+- **The owner decides.** The orchestrator proposes and the owner confirms. The owner may override in either direction, and the override is logged as an `owner-decision`.
+- **Every confirmed tier is logged**, with the reasons, so the choice is traceable.
 
 ## DECISION NEEDED format
 
@@ -80,7 +97,7 @@ The orchestrator shows the block to the owner. The owner's answer is recorded in
 
 ## Decision log
 
-Every decision in the flow is recorded in one place: `docs/decisions/log.md`. It is append-only: entries are never edited or deleted. A change of mind is a new entry that supersedes the old one.
+Every decision in the flow is recorded in one place: `docs/decisions/log.md`. It is append-only: entries are never edited or deleted. A change of mind is a new entry that supersedes the old one. The one permitted edit: when a later entry resolves an `open` entry (for example the owner's answer to a `DECISION NEEDED`), the `Status` cell of the open entry is changed to `superseded by D-xxxx`. Nothing else in an existing row changes.
 
 What counts as a decision (all of these are logged, not only the owner's):
 - a stage verdict: Security approves or rejects a design, QA passes or fails a verification
@@ -116,11 +133,11 @@ How it runs:
 
 ## Feature file
 
-Each feature gets one file, `docs/work/<id>.md`, where `<id>` is a short kebab-case name (for example `item-search`). It starts with a status block and then has one section per stage:
+Each Tier 2 and Tier 3 feature gets one file, `docs/work/<id>.md`, where `<id>` is a short kebab-case name (for example `item-search`). The orchestrator checks that the name is not already taken. A Tier 1 change gets no feature file. It starts with a status block and then has one section per stage:
 
 ```
 # item-search
-Stage: PR review, round 2 | Open findings: 1 high, 2 medium | Waiting on: developers
+Tier: 3 | Stage: PR review, round 2 | Gates: G1 approved 2026-11-20, G2 approved 2026-11-21, G3 pending | Open findings: 1 high, 2 medium | Waiting on: developers
 
 ## Brief                      (Product)
 ## Design                     (Architect)
