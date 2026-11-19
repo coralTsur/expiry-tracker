@@ -77,6 +77,7 @@ You cannot run commands. The main conversation runs them. At the end of round 2,
 - Test files sit next to the component: ItemList.test.jsx.
 - Mock the src/api module, not fetch.
 - Test what the user sees (text, roles, states), not implementation details.
+- **The QA agent's acceptance tests are not yours.** Never create, edit or delete a file named `*.acceptance.test.jsx` or `*.acceptance.test.js`. If one of them fails, make your code satisfy it. If you believe the test itself is wrong, do not change it: stop and report which test and why, so the QA agent or the owner can decide. Your own tests, written for the code you build, stay yours.
 
 ## Workflow: two rounds
 

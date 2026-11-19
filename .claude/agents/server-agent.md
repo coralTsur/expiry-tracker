@@ -47,6 +47,7 @@ Your job is the layer between HTTP and the data layer: controller, service, DTOs
 - Tests must not depend on the real date or on execution order.
 - The 5 existing tests must keep passing. Never change an existing test to make it pass. If an existing test breaks, stop and report.
 - Test names describe behavior, e.g. `expiringSoon_excludesUsedItems`.
+- **The QA agent's acceptance tests are not yours.** Never create, edit or delete files in `backend/src/test/java/com/coral/expirytracker/acceptance/` or any test class whose name ends with `AcceptanceTest`. If one of them fails, make your code satisfy it. If you believe the test itself is wrong, do not change it: stop and report which test and why, so the QA agent or the owner can decide. Your own tests, written for the code you build, stay yours.
 
 ## When something is undefined
 - A rule that is missing, ambiguous or contradictory in the spec: do not guess. Stop, quote the relevant part, and ask a question with 2–3 options.

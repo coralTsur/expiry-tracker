@@ -23,6 +23,7 @@ You do not touch:
 - Controllers, services or DTOs
 - `frontend/`, `docs/`, `CLAUDE.md` or anything in `.claude/`
 - `pom.xml`. If a dependency is needed (JPA, H2, PostgreSQL driver), say which one and why, and let the main session handle it.
+- The QA agent's acceptance tests: never create, edit or delete files in `backend/src/test/java/com/coral/expirytracker/acceptance/` or any test class whose name ends with `AcceptanceTest`. If one of them fails, make your code satisfy it. If you believe the test itself is wrong, do not change it: stop and report which test and why, so the QA agent or the owner can decide.
 
 ## Database rules
 - H2 now, PostgreSQL later. Write SQL that works in both. Avoid H2-only syntax and functions.
